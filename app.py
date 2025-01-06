@@ -6,7 +6,46 @@ from io import StringIO
 import base64
 import plotly.express as px
 
-st.title("ETRM Data Retrieval and Visualization Tool")
+# Set page config for a wider layout
+st.set_page_config(layout="wide")
+
+# Add some styling
+st.markdown("""
+    <style>
+        .stApp {
+            max-width: 100%;
+            padding: 2rem;
+        }
+        .stTextInput > div > div > input {
+            background-color: #f8f9fa;
+        }
+        .stTextArea > div > div > textarea {
+            background-color: #f8f9fa;
+        }
+        .stButton > button {
+          background-color: #007bff;
+          color: white;
+        }
+        .stSelectbox > div > div > div > input {
+           background-color:#f8f9fa;
+        }
+
+    </style>
+""", unsafe_allow_html=True)
+
+# Custom CSS for the title
+st.markdown("""
+    <style>
+        .big-font {
+            font-size:3rem !important;
+            font-weight: bold;
+            color:#007bff;
+            margin-bottom: 1rem;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+st.markdown('<p class="big-font">ETRM Data Retrieval and Visualization Tool</p>', unsafe_allow_html=True)
 
 # Function to execute a query and return a pandas DataFrame
 @st.cache_data
@@ -54,11 +93,10 @@ if st.button("Retrieve Data"):
         st.session_state.query_result = df
 if st.session_state.query_result is not None:
     df = st.session_state.query_result
-    st.write("Query Results:")
+    st.markdown("### Query Results")
     st.dataframe(df) # Display dataframe
-
      # Visualization options
-    st.subheader("Visualization Options")
+    st.markdown("### Visualization Options")
     if len(df.columns)>1:
          x_axis = st.selectbox("Select X-axis", options=df.columns, key="x_axis")
          y_axis = st.selectbox("Select Y-axis", options=df.columns, key="y_axis")
