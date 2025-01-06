@@ -18,9 +18,11 @@ st.markdown("""
         }
         .stTextInput > div > div > input {
             background-color: #f8f9fa;
+            color: #333;  /* Set font color to a dark gray */
         }
         .stTextArea > div > div > textarea {
             background-color: #f8f9fa;
+            color: #333; /* Set font color to a dark gray */
         }
         .stButton > button {
           background-color: #007bff;
@@ -95,6 +97,7 @@ if st.session_state.query_result is not None:
     df = st.session_state.query_result
     st.markdown("### Query Results")
     st.dataframe(df) # Display dataframe
+
      # Visualization options
     st.markdown("### Visualization Options")
     if len(df.columns)>1:
