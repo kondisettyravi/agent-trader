@@ -11,7 +11,7 @@ st.title("ETRM Data Retrieval and Visualization Tool")
 # Function to execute a query and return a pandas DataFrame
 def execute_query(query):
     # Replace with your Azure Function endpoint
-    azure_function_endpoint = "YOUR_AZURE_FUNCTION_ENDPOINT"
+    azure_function_endpoint = "https://agent-trader.azurewebsites.net/api/*?"
 
     try:
         response = requests.post(
