@@ -9,9 +9,10 @@ import plotly.express as px
 st.title("ETRM Data Retrieval and Visualization Tool")
 
 # Function to execute a query and return a pandas DataFrame
+@st.cache_data
 def execute_query(query):
     # Replace with your Azure Function endpoint
-    azure_function_endpoint = "https://agent-trader.azurewebsites.net/api/*?"
+    azure_function_endpoint = "YOUR_AZURE_FUNCTION_ENDPOINT"
 
     try:
         response = requests.post(
@@ -41,6 +42,8 @@ def execute_query(query):
 
 # Input for the user query
 query = st.text_area("Enter your query:", height=150)
+if 'query_result' not in st.session_state:
+     st.session_state.query_result = None
 
 if st.button("Retrieve Data"):
     if not query:
@@ -48,24 +51,26 @@ if st.button("Retrieve Data"):
     else:
         with st.spinner("Executing query..."):
            df = execute_query(query)
-        if df is not None:
-            st.write("Query Results:")
-            st.dataframe(df) # Display dataframe
+        st.session_state.query_result = df
+if st.session_state.query_result is not None:
+    df = st.session_state.query_result
+    st.write("Query Results:")
+    st.dataframe(df) # Display dataframe
 
-            # Visualization options
-            st.subheader("Visualization Options")
-            if len(df.columns)>1:
-                x_axis = st.selectbox("Select X-axis", options=df.columns)
-                y_axis = st.selectbox("Select Y-axis", options=df.columns)
-                if st.button("Plot Chart"):
-                    try:
-                        fig = px.bar(df, x=x_axis, y=y_axis)
-                        st.plotly_chart(fig)
-                    except Exception as e:
-                        st.error(f"Error while plotting:{e}")
+     # Visualization options
+    st.subheader("Visualization Options")
+    if len(df.columns)>1:
+         x_axis = st.selectbox("Select X-axis", options=df.columns, key="x_axis")
+         y_axis = st.selectbox("Select Y-axis", options=df.columns, key="y_axis")
+         if st.button("Plot Chart"):
+             try:
+                 fig = px.bar(df, x=x_axis, y=y_axis)
+                 st.plotly_chart(fig)
+             except Exception as e:
+                 st.error(f"Error while plotting:{e}")
 
-            # Download Button
-            csv = df.to_csv(index=False)
-            b64 = base64.b64encode(csv.encode()).decode()
-            href = f'<a href="data:file/csv;base64,{b64}" download="results.csv">Download Results as CSV</a>'
-            st.markdown(href, unsafe_allow_html=True)
+    # Download Button
+    csv = df.to_csv(index=False)
+    b64 = base64.b64encode(csv.encode()).decode()
+    href = f'<a href="data:file/csv;base64,{b64}" download="results.csv">Download Results as CSV</a>'
+    st.markdown(href, unsafe_allow_html=True)
