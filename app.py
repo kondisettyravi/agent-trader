@@ -95,7 +95,7 @@ if st.button("Retrieve Data"):
     if not query:
         st.warning("Please enter a query.")
     else:
-        with st.spinner("Executing query..."):
+        with st.spinner("Agent at work. Parsing your request and fetching results..."):
            df = execute_query(query)
         st.session_state.query_result = df
 if st.session_state.query_result is not None:
