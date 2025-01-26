@@ -52,7 +52,7 @@ st.markdown('<p class="big-font">ETRM Data Retrieval and Visualization Tool</p>'
 @st.cache_data
 def execute_query(query):
     # Replace with your Azure Function endpoint
-    azure_function_endpoint = "https://agent-trader.azurewebsites.net/api/*?"
+    azure_function_endpoint = "YOUR_AZURE_FUNCTION_ENDPOINT"
 
     try:
         response = requests.post(
@@ -69,10 +69,13 @@ def execute_query(query):
 
         data = response_json['result']
         try:
-           df = pd.read_json(data)
-           return df
+            df = pd.read_json(data)
+            return df
         except:
-          return pd.DataFrame([{"Result": data}]) # Create a Dataframe, if there is only single value.
+             if isinstance(data, dict) and "result" in data:
+                  return pd.DataFrame([{"Result":data['result']}]) # Create a Dataframe, if there is only single value.
+             else:
+                 return pd.DataFrame([{"Result":data}])
     except requests.exceptions.RequestException as e:
         st.error(f"An error occurred during API call: {e}")
         return None
@@ -110,8 +113,7 @@ if st.session_state.query_result is not None:
                 fig = px.bar(df, x=x_axis, y=y_axis)
                 st.plotly_chart(fig)
             except Exception as e:
-               st.error(f"Error while plotting:{e}")
-
+                 st.error(f"Error while plotting:{e}")
 
     # Download Button
     csv = df.to_csv(index=False)
