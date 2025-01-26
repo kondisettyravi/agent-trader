@@ -53,7 +53,7 @@ st.markdown('<p class="big-font">ETRM Data Retrieval and Visualization Tool</p>'
 @st.cache_data
 def execute_query(query):
     # Replace with your Azure Function endpoint
-    azure_function_endpoint = "https://trader-agent.azurewebsites.net/api/http_trigger1?"
+    azure_function_endpoint = "https://trader-agent.azurewebsites.net/api/*?"
 
     try:
         response = requests.post(
