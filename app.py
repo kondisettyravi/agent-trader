@@ -28,7 +28,7 @@ st.markdown("""
           background-color: #007bff;
           color: white;
         }
-        .stSelectbox > div > div > div > input {
+         .stSelectbox > div > div > div > input {
              background-color:#f8f9fa;
           }
     </style>
@@ -52,7 +52,7 @@ st.markdown('<p class="big-font">ETRM Data Retrieval and Visualization Tool</p>'
 @st.cache_data
 def execute_query(query):
     # Replace with your Azure Function endpoint
-    azure_function_endpoint = "https://agent-trader.azurewebsites.net/api/*?"
+    azure_function_endpoint = "YOUR_AZURE_FUNCTION_ENDPOINT"
 
     try:
         response = requests.post(
@@ -94,7 +94,11 @@ for message in reversed(st.session_state.messages):
     if message["role"] == "user":
         st.markdown(f'<div style="background-color:#f0f2f6;padding:10px;border-radius:5px;margin-bottom:10px;">User: {message["content"]}</div>', unsafe_allow_html=True)
     else:
-        st.markdown(f'<div style="background-color:#e5f6e3;padding:10px;border-radius:5px;margin-bottom:10px;">Assistant: {message["content"]}</div>', unsafe_allow_html=True)
+        if isinstance(message["content"], pd.DataFrame):
+            st.markdown(f'<div style="background-color:#e5f6e3;padding:10px;border-radius:5px;margin-bottom:10px;">Assistant: Showing results as table</div>', unsafe_allow_html=True)
+            st.dataframe(message["content"])
+        else:
+            st.markdown(f'<div style="background-color:#e5f6e3;padding:10px;border-radius:5px;margin-bottom:10px;">Assistant: Value at Risk = {message["content"]["Result"]}</div>', unsafe_allow_html=True)
 
 if st.button("Retrieve Data"):
     if not query:
@@ -106,35 +110,36 @@ if st.button("Retrieve Data"):
                 #Add user message to the state
                 st.session_state.messages.append({"role": "user", "content": query})
                 if isinstance(result, pd.DataFrame):
-                    st.session_state.messages.append({"role": "assistant", "content": "Showing Results as a Table"})
-                     #Display results
+                    #Display results
+                     st.session_state.messages.append({"role": "assistant", "content": result})
                     st.markdown("### Query Results")
                     st.dataframe(result) # Display dataframe
 
                      # Visualization options
                     st.markdown("### Visualization Options")
                     if len(result.columns) > 1:
-                        x_axis = st.selectbox("Select X-axis", options=result.columns, key="x_axis")
-                        y_axis = st.selectbox("Select Y-axis", options=result.columns, key="y_axis")
-                        if st.button("Plot Chart"):
-                            try:
-                                 fig = px.bar(result, x=x_axis, y=y_axis)
-                                 st.plotly_chart(fig)
-                            except Exception as e:
-                                 st.error(f"Error while plotting:{e}")
-                        # Download Button
+                         x_axis = st.selectbox("Select X-axis", options=result.columns, key="x_axis")
+                         y_axis = st.selectbox("Select Y-axis", options=result.columns, key="y_axis")
+                         if st.button("Plot Chart"):
+                             try:
+                                  fig = px.bar(result, x=x_axis, y=y_axis)
+                                  st.plotly_chart(fig)
+                             except Exception as e:
+                                   st.error(f"Error while plotting:{e}")
+                       # Download Button
                     csv = result.to_csv(index=False)
                     b64 = base64.b64encode(csv.encode()).decode()
                     href = f'<a href="data:file/csv;base64,{b64}" download="results.csv">Download Results as CSV</a>'
                     st.markdown(href, unsafe_allow_html=True)
 
                 elif isinstance(result, dict) and "Result" in result:
-                    st.session_state.messages.append({"role": "assistant", "content": f"Value at Risk: {result['Result']}"})
-                    st.markdown("### Query Results")
-                    st.write(f"Result: {result['Result']}")
+                      st.session_state.messages.append({"role": "assistant", "content": result})
+                      st.markdown("### Query Results")
+                      st.write(f"Result: {result['Result']}")
             else:
-                st.session_state.messages.append({"role": "assistant", "content": "There were no results, please try again."})
-                st.write("No Results/ Unsupported Operation")
+                 st.session_state.messages.append({"role": "assistant", "content": "There were no results, please try again."})
+                 st.write("No Results/ Unsupported Operation")
+
     if len(st.session_state.messages) > 15:
          st.session_state.messages = st.session_state.messages[-15:]
 
@@ -142,7 +147,7 @@ if st.button("Retrieve Data"):
 @st.cache_data
 def execute_query(query):
     # Replace with your Azure Function endpoint
-    azure_function_endpoint = "https://agent-trader.azurewebsites.net/api/*?"
+    azure_function_endpoint = "https://agent-trader-app.azurewebsites.net/api/*?"
 
     try:
         response = requests.post(
