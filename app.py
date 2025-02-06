@@ -48,11 +48,51 @@ st.markdown("""
 
 st.markdown('<p class="big-font">ETRM Data Retrieval and Visualization Tool</p>', unsafe_allow_html=True)
 
+# Input for the user query
+query = st.text_area("Enter your query:", height=150)
+if 'query_result' not in st.session_state:
+     st.session_state.query_result = None
+
+if st.button("Retrieve Data"):
+    if not query:
+        st.warning("Please enter a query.")
+    else:
+        with st.spinner("Executing query..."):
+           df = execute_query(query)
+        st.session_state.query_result = df
+
+if st.session_state.query_result is not None:
+    result = st.session_state.query_result
+    st.markdown("### Query Results")
+    if isinstance(result, pd.DataFrame):
+        st.dataframe(result)
+
+        # Visualization options
+        st.markdown("### Visualization Options")
+        if len(result.columns) > 1:
+            x_axis = st.selectbox("Select X-axis", options=result.columns, key="x_axis")
+            y_axis = st.selectbox("Select Y-axis", options=result.columns, key="y_axis")
+            if st.button("Plot Chart"):
+                 try:
+                     fig = px.bar(result, x=x_axis, y=y_axis)
+                     st.plotly_chart(fig)
+                 except Exception as e:
+                     st.error(f"Error while plotting:{e}")
+
+        # Download Button
+        csv = result.to_csv(index=False)
+        b64 = base64.b64encode(csv.encode()).decode()
+        href = f'<a href="data:file/csv;base64,{b64}" download="results.csv">Download Results as CSV</a>'
+        st.markdown(href, unsafe_allow_html=True)
+
+    elif isinstance(result, dict) and "result" in result:
+        st.write(f"Result: {result['Result']}")
+
 # Function to execute a query and return a pandas DataFrame
 @st.cache_data
 def execute_query(query):
     # Replace with your Azure Function endpoint
-    azure_function_endpoint = "YOUR_AZURE_FUNCTION_ENDPOINT"
+    azure_function_endpoint = "https://agent-trader.azurewebsites.net/api/*?"
 
     try:
         response = requests.post(
@@ -71,9 +111,9 @@ def execute_query(query):
         try:
             df = pd.read_json(data)
             return df
-        except Exception as e:
-             df = pd.DataFrame([{"Result": data}]) # Create a Dataframe, if there is only single value.
-             return df
+        except:
+            return {"Result": data} #Just return the value to be used by streamlit.
+
     except requests.exceptions.RequestException as e:
         st.error(f"An error occurred during API call: {e}")
         return None
@@ -83,44 +123,3 @@ def execute_query(query):
     except Exception as e:
         st.error(f"An unexpected error occurred: {e}")
         return None
-
-# Input for the user query
-query = st.text_area("Enter your query:", height=150)
-if 'query_result' not in st.session_state:
-     st.session_state.query_result = None
-
-if st.button("Retrieve Data"):
-    if not query:
-        st.warning("Please enter a query.")
-    else:
-        with st.spinner("Executing query..."):
-           df = execute_query(query)
-        st.session_state.query_result = df
-
-if st.session_state.query_result is not None:
-    result = st.session_state.query_result
-    if isinstance(result, pd.DataFrame):
-        st.markdown("### Query Results")
-        st.dataframe(result)
-
-        # Visualization options
-        st.markdown("### Visualization Options")
-        if len(result.columns) > 1:
-            x_axis = st.selectbox("Select X-axis", options=result.columns, key="x_axis")
-            y_axis = st.selectbox("Select Y-axis", options=result.columns, key="y_axis")
-            if st.button("Plot Chart"):
-                try:
-                    fig = px.bar(result, x=x_axis, y=y_axis)
-                    st.plotly_chart(fig)
-                except Exception as e:
-                     st.error(f"Error while plotting:{e}")
-        # Download Button
-        csv = result.to_csv(index=False)
-        b64 = base64.b64encode(csv.encode()).decode()
-        href = f'<a href="data:file/csv;base64,{b64}" download="results.csv">Download Results as CSV</a>'
-        st.markdown(href, unsafe_allow_html=True)
-
-    else:
-        df = pd.DataFrame([result])
-        st.markdown("### Query Results")
-        st.dataframe(df)
