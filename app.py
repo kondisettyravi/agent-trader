@@ -52,7 +52,7 @@ st.markdown('<p class="big-font">ETRM Data Retrieval and Visualization Tool</p>'
 @st.cache_data
 def execute_query(query):
     # Replace with your Azure Function endpoint
-    azure_function_endpoint = "https://agent-trader.azurewebsites.net/api/*?"
+    azure_function_endpoint = "https://agent-trader-app.azurewebsites.net/api/*?"
 
     try:
         response = requests.post(
@@ -72,10 +72,7 @@ def execute_query(query):
             df = pd.read_json(data)
             return df
         except:
-             if isinstance(data, dict) and "result" in data:
-                  return pd.DataFrame([{"Result":data['result']}]) # Create a Dataframe, if there is only single value.
-             else:
-                 return pd.DataFrame([{"Result":data}])
+             return {"Result": data} # Create a Dataframe, if there is only single value.
     except requests.exceptions.RequestException as e:
         st.error(f"An error occurred during API call: {e}")
         return None
@@ -83,40 +80,61 @@ def execute_query(query):
          st.error(f"Error decoding API response: {e}")
          return None
     except Exception as e:
-        st.error(f"An unexpected error occurred: {e}")
-        return None
+         st.error(f"An unexpected error occurred: {e}")
+         return None
+ # Initialization
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
 
-# Input for the user query
-query = st.text_area("Enter your query:", height=150)
-if 'query_result' not in st.session_state:
-     st.session_state.query_result = None
+    # Display chat history
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
-if st.button("Retrieve Data"):
-    if not query:
-        st.warning("Please enter a query.")
-    else:
-        with st.spinner("Agent at work. Parsing your request and fetching results..."):
-           df = execute_query(query)
-        st.session_state.query_result = df
-if st.session_state.query_result is not None:
-    df = st.session_state.query_result
-    st.markdown("### Query Results")
-    st.dataframe(df) # Display dataframe
+    # Chat input
+    query = st.chat_input("Enter your query:")
 
-    # Visualization options
-    st.markdown("### Visualization Options")
-    if len(df.columns)>1:
-         x_axis = st.selectbox("Select X-axis", options=df.columns, key="x_axis")
-         y_axis = st.selectbox("Select Y-axis", options=df.columns, key="y_axis")
-         if st.button("Plot Chart"):
-            try:
-                fig = px.bar(df, x=x_axis, y=y_axis)
-                st.plotly_chart(fig)
-            except Exception as e:
-                 st.error(f"Error while plotting:{e}")
+    if query:
+        # Add user message to chat history
+        st.session_state.messages.append({"role": "user", "content": query})
+        with st.chat_message("user"):
+             st.markdown(query)
 
-    # Download Button
-    csv = df.to_csv(index=False)
-    b64 = base64.b64encode(csv.encode()).decode()
-    href = f'<a href="data:file/csv;base64,{b64}" download="results.csv">Download Results as CSV</a>'
-    st.markdown(href, unsafe_allow_html=True)
+    # Execute the query
+        df = execute_query(query)
+        if df is not None:
+            st.session_state.messages.append({"role": "assistant", "content": "Executed Query Successfully"})
+            with st.chat_message("assistant"):
+               st.markdown("Executed Query Successfully")
+            st.markdown("### Query Results")
+            st.dataframe(df) # Display dataframe
+
+           # Visualization options
+            st.markdown("### Visualization Options")
+           #Here we'll add 10 more kinds of graphs
+            chart_types = ['line', 'bar', 'scatter', 'pie', 'area']
+
+            if len(df.columns)>1:
+                 x_axis = st.selectbox("Select X-axis", options=df.columns, key="x_axis")
+                 y_axis = st.selectbox("Select Y-axis", options=df.columns, key="y_axis")
+                 chart_type = st.selectbox("Select Chart Type", options=chart_types, key="chart_type")
+                 if st.button("Plot Chart"):
+                   try:
+                        if chart_type == 'line':
+                            fig = px.line(df, x=x_axis, y=y_axis)
+                        elif chart_type == 'bar':
+                            fig = px.bar(df, x=x_axis, y=y_axis)
+                        elif chart_type == 'scatter':
+                            fig = px.scatter(df, x=x_axis, y=y_axis)
+                        elif chart_type == 'pie':
+                            fig = px.pie(df, values=y_axis, names=x_axis)
+                        elif chart_type == 'area':
+                            fig = px.area(df, x=x_axis, y=y_axis)
+                        st.plotly_chart(fig)
+                   except Exception as e:
+                        st.error(f"Error while plotting:{e}")
+
+        else:
+             st.session_state.messages.append({"role": "assistant", "content": "An error occurred, please check the prompt"})
+             with st.chat_message("assistant"):
+                st.markdown("An error occurred, please check the prompt")
