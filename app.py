@@ -80,10 +80,9 @@ def execute_query(query):
          st.error(f"Error decoding API response: {e}")
          return None
     except Exception as e:
-        st.error(f"An unexpected error occurred: {e}")
-        return None
-
-# Initialization
+         st.error(f"An unexpected error occurred: {e}")
+         return None
+ # Initialization
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -102,37 +101,41 @@ if query:
         st.markdown(query)
 
     # Execute the query
-    df = execute_query(query)
-    if df is not None:
+    results = execute_query(query)
+    if results is not None:
         st.session_state.messages.append({"role": "assistant", "content": "Executed Query Successfully"})
         with st.chat_message("assistant"):
             st.markdown("Executed Query Successfully")
         st.markdown("### Query Results")
-        st.dataframe(df) # Display dataframe
-        # Visualization options
-        st.markdown("### Visualization Options")
-        chart_types = ['line', 'bar', 'scatter', 'pie', 'area']
+        if isinstance(results, dict):
+          st.write(results["Result"])
+        else:
+          st.dataframe(results) # Display dataframe
+         # Visualization options
+          st.markdown("### Visualization Options")
+          chart_types = ['line', 'bar', 'scatter', 'pie', 'area']
 
-        if len(df.columns)>1:
-            x_axis = st.selectbox("Select X-axis", options=df.columns, key="x_axis")
-            y_axis = st.selectbox("Select Y-axis", options=df.columns, key="y_axis")
+          if len(results.columns)>1:
+            x_axis = st.selectbox("Select X-axis", options=results.columns, key="x_axis")
+            y_axis = st.selectbox("Select Y-axis", options=results.columns, key="y_axis")
             chart_type = st.selectbox("Select Chart Type", options=chart_types, key="chart_type")
             if st.button("Plot Chart"):
-                try:
-                    if chart_type == 'line':
-                        fig = px.line(df, x=x_axis, y=y_axis)
-                    elif chart_type == 'bar':
-                        fig = px.bar(df, x=x_axis, y=y_axis)
-                    elif chart_type == 'scatter':
-                        fig = px.scatter(df, x=x_axis, y=y_axis)
-                    elif chart_type == 'pie':
-                        fig = px.pie(df, values=y_axis, names=x_axis)
-                    elif chart_type == 'area':
-                        fig = px.area(df, x=x_axis, y=y_axis)
-                    st.plotly_chart(fig)
-                except Exception as e:
+               try:
+                   if chart_type == 'line':
+                       fig = px.line(results, x=x_axis, y=y_axis)
+                   elif chart_type == 'bar':
+                       fig = px.bar(results, x=x_axis, y=y_axis)
+                   elif chart_type == 'scatter':
+                        fig = px.scatter(results, x=x_axis, y=y_axis)
+                   elif chart_type == 'pie':
+                       fig = px.pie(results, values=y_axis, names=x_axis)
+                   elif chart_type == 'area':
+                       fig = px.area(results, x=x_axis, y=y_axis)
+                   st.plotly_chart(fig)
+               except Exception as e:
                     st.error(f"Error while plotting:{e}")
+
     else:
          st.session_state.messages.append({"role": "assistant", "content": "An error occurred, please check the prompt"})
          with st.chat_message("assistant"):
-              st.markdown("An error occurred, please check the prompt")
+             st.markdown("An error occurred, please check the prompt")
