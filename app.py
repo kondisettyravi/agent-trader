@@ -30,11 +30,13 @@ st.markdown("""
             </select>
         </div>
         <div style='text-align: center;'>
-            <span style='font-size: 1rem; font-weight: bold; color: #007bff; margin-right: 10px;'>Database</span>
+            <span style='font-size: 1rem; font-weight: bold; color: #007bff; margin-right: 10px;'>Environment</span>
         </div>
         <div style='text-align: center; margin-right: 20px;'>
             <select style='font-size: 1rem; background-color: white; color: black;'>
-                <option value="DRW">Endur092_Staging</option>
+                <option value="Kazhuga">Dev</option>
+                <option value="Kazhuga">UAT</option>
+                <option value="Kazhuga">Prod</option>
                 <!-- Add more options here if needed -->
             </select>
         </div>
