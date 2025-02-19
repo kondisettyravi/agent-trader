@@ -25,7 +25,7 @@ st.markdown("""
         </div>
         <div style='text-align: center; margin-right: 20px;'>
             <select style='font-size: 1rem; background-color: white; color: black;'>
-                <option value="DRW">DRW</option>
+                <option value="Kazhuga">Kazhuga</option>
                 <!-- Add more options here if needed -->
             </select>
         </div>
